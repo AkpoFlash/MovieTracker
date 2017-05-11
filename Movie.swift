@@ -1,6 +1,6 @@
 //
 //  Movie.swift
-//  firstApp
+//  MoviesStory
 //
 //  Created by Кирилл Анисимов on 09.05.17.
 //  Copyright © 2017 Кирилл Анисимов. All rights reserved.

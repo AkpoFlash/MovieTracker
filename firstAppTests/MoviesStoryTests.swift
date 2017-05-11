@@ -1,13 +1,13 @@
 //
-//  firstAppTests.swift
-//  firstAppTests
+//  MoviesStoryTests.swift
+//  MoviesStoryTests
 //
 //  Created by Кирилл Анисимов on 04.05.17.
 //  Copyright © 2017 Кирилл Анисимов. All rights reserved.
 //
 
 import XCTest
-@testable import firstApp
+@testable import MoviesStory
 
 class MoviesStoryTests: XCTestCase {
     

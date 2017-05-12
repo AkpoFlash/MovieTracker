@@ -7,7 +7,6 @@
 //
 
 import UIKit
-import os.log
 
 class MovieViewController: UIViewController, UITextFieldDelegate, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
     
@@ -29,6 +28,14 @@ class MovieViewController: UIViewController, UITextFieldDelegate, UIImagePickerC
         
         // Handle the text field's user input through delegate callbacks.
         nameTextField.delegate = self
+        
+        // Set up views if editing an existing Movie.
+        if let movie = movie {
+            navigationItem.title = movie.name
+            nameTextField.text = movie.name
+            photoImageView.image = movie.photo
+            ratingControl.rating = movie.rating
+        }
         
         // Enable the Save button only if the text field has a valid Movie name.
         updateSaveButtonState()
@@ -90,17 +97,29 @@ class MovieViewController: UIViewController, UITextFieldDelegate, UIImagePickerC
     
     //MARK: Navigation
     @IBAction func cancel(_ sender: UIBarButtonItem) {
-        dismiss(animated: true, completion: nil)
+        // Depending on style of presentation (modal or push presentation),
+        // this view controller needs to be dismissed in two different ways.
+        let isPresentingInAddMovieMode = presentingViewController is UINavigationController
+        
+        if isPresentingInAddMovieMode {
+            dismiss(animated: true, completion: nil)
+        }
+        else if let owningNavigationController = navigationController {
+            owningNavigationController.popViewController(animated: true)
+        }
+        else{
+            fatalError("The MovieViewController is not inside a navigation controller.")
+        }
     }
     
     // This method lets you configure a view controller before it's presented.
-    override func prepare(for seque: UIStoryboardSegue, sender: Any?){
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?){
         
-        super.prepare(for: seque, sender: sender)
+        super.prepare(for: segue, sender: sender)
         
         // Configure the destination view controller only when the save button is pressed.
         guard let button = sender as? UIBarButtonItem, button === saveButton else {
-            os_log("The save button was not pressed, cancelling", log: OSLog.default, type: .debug)
+            print("The save button was not pressed, cancelling")
             return
         }
         

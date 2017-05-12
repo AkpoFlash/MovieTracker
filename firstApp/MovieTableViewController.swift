@@ -16,8 +16,18 @@ class MovieTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        // Load tha sample data
-        loadSampleMovie()
+        // Use the edit button item provided by the table view controller.
+        navigationItem.leftBarButtonItem = editButtonItem
+        
+        // Load and saved movies, otherwise load sample data.
+        if let savedMovies = loadMovies(){
+            movies += savedMovies
+        }
+        else{
+            // Load the sample data.
+            loadSampleMovie()
+        }
+        
     }
 
     override func didReceiveMemoryWarning() {
@@ -55,25 +65,27 @@ class MovieTableViewController: UITableViewController {
     }
     
 
-    /*
+    
     // Override to support conditional editing of the table view.
     override func tableView(_ tableView: UITableView, canEditRowAt indexPath: IndexPath) -> Bool {
         // Return false if you do not want the specified item to be editable.
         return true
     }
-    */
+    
 
-    /*
+
     // Override to support editing the table view.
     override func tableView(_ tableView: UITableView, commit editingStyle: UITableViewCellEditingStyle, forRowAt indexPath: IndexPath) {
         if editingStyle == .delete {
             // Delete the row from the data source
+            movies.remove(at: indexPath.row)
+            saveMovies()
             tableView.deleteRows(at: [indexPath], with: .fade)
         } else if editingStyle == .insert {
             // Create a new instance of the appropriate class, insert it into the array, and add a new row to the table view
         }    
     }
-    */
+    
 
     /*
     // Override to support rearranging the table view.
@@ -90,23 +102,56 @@ class MovieTableViewController: UITableViewController {
     }
     */
 
-    /*
+    
     // MARK: - Navigation
 
     // In a storyboard-based application, you will often want to do a little preparation before navigation
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+        super.prepare(for: segue, sender: sender)
+        switch (segue.identifier ?? "") {
+        case "AddItem":
+            print("Adding a new movie")
+        case "ShowDetail":
+            guard let movieDetailViewController = segue.destination as? MovieViewController else {
+                fatalError("Unexpected destination: \(segue.destination)")
+            }
+            
+            guard let selectedMovieCell = sender as? MovieTableViewCell else {
+                fatalError("Unexpected sender: \(sender ?? "")")
+            }
+            
+            guard let indexPath = tableView.indexPath(for: selectedMovieCell) else {
+                fatalError("The selected cell is not being displayed by the table")
+            }
+            
+            let selectedMovie = movies[indexPath.row]
+            movieDetailViewController.movie = selectedMovie
+        default:
+            fatalError("Unexpected Segue Identifier: \(String(describing: segue.identifier))")
+        }
     }
-    */
+ 
     
     //MARK: Actions
     @IBAction func unwindToMovieList(sender: UIStoryboardSegue){
+        
         if let sourceViewController = sender.source as? MovieViewController, let movie = sourceViewController.movie {
-            // Add new movie
-            let newIndexPath = IndexPath(row: movies.count, section: 0)
-            movies.append(movie)
-            tableView.insertRows(at: [newIndexPath], with: .automatic)
+            
+            if let selectedIndexPath = tableView.indexPathForSelectedRow {
+                // Update the existing movie.
+                movies[selectedIndexPath.row] = movie
+                tableView.reloadRows(at: [selectedIndexPath], with: .none)
+            }
+            else{
+                // Add new movie
+                let newIndexPath = IndexPath(row: movies.count, section: 0)
+                
+                movies.append(movie)
+                tableView.insertRows(at: [newIndexPath], with: .automatic)
+            }
+            
+            // Save the movies.
+            saveMovies()
         }
     }
 
@@ -129,6 +174,21 @@ class MovieTableViewController: UITableViewController {
         }
         
         movies += [movie1, movie2, movie3]
+    }
+    
+    private func saveMovies(){
+        let isSuccessfulSave = NSKeyedArchiver.archiveRootObject(movies, toFile: Movie.ArchiveURL.path)
+        
+        if isSuccessfulSave {
+            print("Movie successefully saved.")
+        }
+        else{
+            print("Failed to save movie.")
+        }
+    }
+    
+    private func loadMovies() -> [Movie]? {
+        return NSKeyedUnarchiver.unarchiveObject(withFile: Movie.ArchiveURL.path) as? [Movie]
     }
 
     
